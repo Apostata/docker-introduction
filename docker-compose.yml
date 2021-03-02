@@ -1,0 +1,41 @@
+# versão do docker-compose
+version: "3.7"
+# serviços que serão executados 
+services: 
+    db:
+        image: mysql
+        container_name: mysql-container
+        command: --default-authentication-plugin=mysql_native_password
+        environment: 
+            MYSQL_ROOT_PASSWORD: teste
+        volumes: 
+            - ./api/db/data:/var/lib/mysql
+            - ./api/db/script.sql:/docker-entrypoint-initdb.d/script.sql
+        # reinicia o container se der algum problema 
+        restart: always
+    api:
+        # pega e roda um dokerfile na pasta especificada
+        # caso use outro nome em seu dockerfile, como por exemplo Dockerfile-API
+        # build:
+            # context: "./api"              => pasta
+            # dockerfile: Dockerfile-API    => nome customizado do arquivo dockerfile
+        build: "./api"
+        container_name: node-container
+        restart: always
+        volumes: 
+            - ./api:/home/node/app
+        ports: 
+            - "8091:8091"
+        depends_on: 
+            - db
+    web:
+        image: "php:7.2-apache"
+        container_name: php-container
+        restart: always
+        volumes: 
+            - ./website:/var/www/html
+        ports: 
+            -  "8888:80"
+        depends_on: 
+            - api
+
